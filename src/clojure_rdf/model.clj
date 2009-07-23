@@ -36,12 +36,12 @@
      (struct literal :literal value nil nil))
   ([value datatype]
      (assert (string? value))
-     (assert (string? datatype))
+     (assert (or (string? datatype) (nil? datatype)))
      (struct literal :literal value datatype nil))
   ([value datatype language]
      (assert (string? value))
-     (assert (string? datatype))
-     (assert (string? language))
+     (assert (or (string? datatype) (nil? datatype)))
+     (assert (or (string? language) (nil? language)))
      (struct literal :literal value datatype language)))
 
 (def *blank-node-counter* (atom 0))
@@ -139,3 +139,14 @@
   (assert (stmt? stmt))
   (assert (graph? graph))
   (contains? (:stmts graph) stmt))
+
+(defn graph-size [graph]
+  (count (:stmts graph)))
+
+(defn subject-map [graph resource]
+  (reduce (fn [m stmt]
+            (if (= resource (:subj stmt))
+              (assoc m (:pred stmt) (conj (or (get m (:pred stmt)) #{})
+                                          (:obj stmt)))
+              m))
+          {} (:stmts graph)))
