@@ -1,4 +1,5 @@
 (ns clojure-rdf.model
+  (:refer clojure.set)
   (:import (java.net URI)))
 
 (defstruct resource :type :uri)
@@ -126,19 +127,19 @@
 (def #^{:doc "Function that takes any number of arguments and always
      returns true."} any (constantly true))
 
-(defn add-stmt
+(defn add-stmts
   "Returns a copy of graph with stmt added."
-  [graph stmt]
+  [graph & stmts]
   (assert (stmt? stmt))
   (assert (graph? graph))
-  (assoc graph :stmts (conj (:stmts graph) stmt)))
+  (assoc graph :stmts (union (:stmts graph) (set stmts))))
 
-(defn del-stmt
-  "Returns a copy of graph with stmt removed."
-  [graph stmt]
+(defn del-stmts
+  "Returns a copy of graph with stmts removed."
+  [graph & stmts]
   (assert (stmt? stmt))
   (assert (graph? graph))
-  (assoc graph :stmts (disj (:stmts graph) stmt)))
+  (assoc graph :stmts (difference (:stmts graph) (set stmts))))
 
 (defn contains-stmt?
   "Returns true if graph contains stmt."
@@ -152,9 +153,31 @@
   [graph]
   (count (:stmts graph)))
 
-(defn subject-map [graph resource]
+(defn graph-union
+  "Returns a new graph containing the union of all statements in
+  graphs."
+  [& graphs]
+  (make-graph (union (map :stmts graphs))))
+
+(defn graph-intersection
+  "Returns a new graph containing the intersection of all statements
+  in graphs."
+  [& graphs]
+  (make-graph (intersection (map :stmts graphs))))
+
+(defn graph-difference
+  "Returns a new graph containing the statements in the first graph
+  without the statements of the remaining graphs."
+  [& graphs]
+  (make-graph (difference (map :stmts graphs))))
+
+(defn subject-map
+  "Returns a map of properties of r, a resource.  The value for each
+  key in the map is the set of objects appearing in statements with r
+  as the subject and the key as the predicate."
+  [graph r]
   (reduce (fn [m stmt]
-            (if (= resource (:subj stmt))
+            (if (= r (:subj stmt))
               (assoc m (:pred stmt) (conj (or (get m (:pred stmt)) #{})
                                           (:obj stmt)))
               m))
