@@ -123,24 +123,33 @@
                                 (pred-f (:pred stmt))
                                 (obj-f (:obj stmt)))))))
 
-(def any (constantly true))
+(def #^{:doc "Function that takes any number of arguments and always
+     returns true."} any (constantly true))
 
-(defn add-stmt [graph stmt]
+(defn add-stmt
+  "Returns a copy of graph with stmt added."
+  [graph stmt]
   (assert (stmt? stmt))
   (assert (graph? graph))
   (assoc graph :stmts (conj (:stmts graph) stmt)))
 
-(defn del-stmt [graph stmt]
+(defn del-stmt
+  "Returns a copy of graph with stmt removed."
+  [graph stmt]
   (assert (stmt? stmt))
   (assert (graph? graph))
   (assoc graph :stmts (disj (:stmts graph) stmt)))
 
-(defn contains-stmt? [graph stmt]
+(defn contains-stmt?
+  "Returns true if graph contains stmt."
+  [graph stmt]
   (assert (stmt? stmt))
   (assert (graph? graph))
   (contains? (:stmts graph) stmt))
 
-(defn graph-size [graph]
+(defn graph-size
+  "Returns the number of statements in the graph."
+  [graph]
   (count (:stmts graph)))
 
 (defn subject-map [graph resource]
