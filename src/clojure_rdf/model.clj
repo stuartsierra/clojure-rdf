@@ -49,8 +49,9 @@
 (defn next-blank-node-id []
   (swap! *blank-node-counter* inc))
 
-(defn make-blank-node []
-  (struct blank-node :blank-node (next-blank-node-id)))
+(defn make-blank-node
+  ([] (struct blank-node :blank-node (next-blank-node-id)))
+  ([id] (struct blank-node :blank-node id)))
 
 (defn make-stmt
   ([subj pred obj]
@@ -66,6 +67,7 @@
      (struct stmt :stmt subj pred obj id)))
 
 (defn make-graph
+  ([] (struct graph :graph #{} nil))
   ([stmts]
      (assert (set? stmts))
      (assert (every? stmt? stmts))
