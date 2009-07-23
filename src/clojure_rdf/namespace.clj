@@ -9,3 +9,6 @@
 (defmacro defresource [sym]
   `(def ~sym (make-resource (str (::uri (meta *ns*))
                                  ~(str sym)))))
+
+(defmacro defresources [& symbols]
+  `(do ~@(map #(list 'defresource %) symbols)))
