@@ -23,7 +23,7 @@
 (defn statement-handler [graph-atom]
   (proxy [StatementHandler] []
     (handleStatement [subj pred obj]
-                     (swap! graph-atom add-stmt
+                     (swap! graph-atom add-stmts
                             (make-stmt (from-rio subj)
                                        (from-rio pred)
                                        (from-rio obj))))))

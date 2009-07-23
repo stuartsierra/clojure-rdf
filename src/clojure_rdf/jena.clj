@@ -20,7 +20,7 @@
 (defn arp-statement-handler [graph-atom]
   (proxy [StatementHandler] []
     (statement [subj pred obj]
-               (swap! graph-atom add-stmt (make-stmt (from-jena subj)
+               (swap! graph-atom add-stmts (make-stmt (from-jena subj)
                                           (from-jena pred)
                                           (from-jena obj))))))
 
