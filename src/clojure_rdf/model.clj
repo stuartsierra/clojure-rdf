@@ -86,7 +86,10 @@
     (assert (integer? i))
     i))
 
-(defn literal-data [lit]
+(defn literal-data
+  "Returns the typed value of the literal.  Types are interpreted by
+  the multimethod interpret-datatype."
+  [lit]
   (assert (literal? lit))
   (interpret-datatype (:datatype lit) (:value lit)))
 
