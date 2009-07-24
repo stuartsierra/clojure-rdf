@@ -110,6 +110,10 @@
       (let [u (URI. (str x))]
         (make-resource (str u)))))
 
+(defn as-resource-or-literal [x]
+  (if (resource? x) x
+      (as-literal x)))
+
 (defn as-graph [x]
   (if (graph? x) x
       (if (and (coll? x) (every? stmt? x))
@@ -133,14 +137,14 @@
 (defn add-stmts
   "Returns a copy of graph with stmt added."
   [graph & stmts]
-  (assert (stmt? stmt))
+  (assert (every? stmt? stmts))
   (assert (graph? graph))
   (assoc graph :stmts (union (:stmts graph) (set stmts))))
 
 (defn del-stmts
   "Returns a copy of graph with stmts removed."
   [graph & stmts]
-  (assert (stmt? stmt))
+  (assert (every? stmt? stmt))
   (assert (graph? graph))
   (assoc graph :stmts (difference (:stmts graph) (set stmts))))
 
