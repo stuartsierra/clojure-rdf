@@ -189,3 +189,20 @@
                                           (:obj stmt)))
               m))
           {} (:stmts graph)))
+
+(defn describe
+  "Returns a new graph describing subject.  subject is converted with
+  as-resource.  properties are predicate/value pairs, converted with
+  as-resource and as-resource-or-literal, respectively."
+  [subject & properties]
+  (assert (even? (count properties)))
+  (let [subj (as-resource subject)]
+    (loop [graph (make-graph)
+           props (partition 2 properties)]
+      (if (seq props)
+        (let [[pred obj] (first props)]
+          (recur (add-stmts graph
+                            (make-stmt subj (as-resource pred)
+                                       (as-resource-or-literal obj)))
+                 (next props)))
+        graph))))
