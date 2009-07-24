@@ -1,4 +1,4 @@
-(ns clojure-rdf.test-model
+(ns clojure-rdf.test-make
   (:use clojure.test clojure-rdf.model))
 
 (def *alan* "http://dbpedia.org/resource/Alan_Turing")
