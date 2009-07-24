@@ -199,12 +199,7 @@
   [subject & properties]
   (assert (even? (count properties)))
   (let [subj (as-resource subject)]
-    (loop [graph (make-graph)
-           props (partition 2 properties)]
-      (if (seq props)
-        (let [[pred obj] (first props)]
-          (recur (add-stmts graph
+    (make-graph (set (map (fn [[pred obj]]
                             (make-stmt subj (as-resource pred)
                                        (as-resource-or-literal obj)))
-                 (next props)))
-        graph))))
+                          (partition 2 properties))))))
