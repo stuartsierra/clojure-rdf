@@ -43,6 +43,8 @@
      (assert (string? value))
      (assert (or (string? datatype) (nil? datatype)))
      (assert (or (string? language) (nil? language)))
+     ;; may not have both datatype & language
+     (assert (or (nil? datatype) (nil? language)))
      (struct literal :literal value datatype language)))
 
 (def *blank-node-counter* (atom 0))
