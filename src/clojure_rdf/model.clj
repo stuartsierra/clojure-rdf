@@ -166,19 +166,19 @@
   "Returns a new graph containing the union of all statements in
   graphs."
   [& graphs]
-  (make-graph (union (map :stmts graphs))))
+  (make-graph (apply union (map :stmts graphs))))
 
 (defn graph-intersection
   "Returns a new graph containing the intersection of all statements
   in graphs."
   [& graphs]
-  (make-graph (intersection (map :stmts graphs))))
+  (make-graph (apply intersection (map :stmts graphs))))
 
 (defn graph-difference
   "Returns a new graph containing the statements in the first graph
   without the statements of the remaining graphs."
   [& graphs]
-  (make-graph (difference (map :stmts graphs))))
+  (make-graph (apply difference (map :stmts graphs))))
 
 (defn subject-map
   "Returns a map of properties of r, a resource.  The value for each
