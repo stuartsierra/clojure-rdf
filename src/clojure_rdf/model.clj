@@ -203,11 +203,12 @@
   [subject & properties]
   (assert (even? (count properties)))
   (let [subj (as-resource subject)]
-    (make-graph (set (mapcat (fn [[pred obj]]
-                               (if (vector? obj)
-                                 (cons (make-stmt subj (as-resource pred)
-                                                  (as-resource-or-literal (first obj)))
-                                       (seq (:stmts (apply describe obj))))
-                                 (list (make-stmt subj (as-resource pred)
-                                                  (as-resource-or-literal obj)))))
-                             (partition 2 properties))))))
+    (make-graph (apply union
+                       (map (fn [[pred obj]]
+                              (if (vector? obj)
+                                (conj (:stmts (apply describe obj))
+                                      (make-stmt subj (as-resource pred)
+                                                 (as-resource-or-literal (first obj))))
+                                #{(make-stmt subj (as-resource pred)
+                                             (as-resource-or-literal obj))}))
+                            (partition 2 properties))))))
