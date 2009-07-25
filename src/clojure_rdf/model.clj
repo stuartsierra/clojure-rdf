@@ -108,12 +108,12 @@
   (make-literal (str x) "http://www.w3.org/2001/XMLSchema#integer"))
 
 (defn as-resource [x]
-  (if (resource? x) x
+  (if (or (resource? x) (blank-node? x)) x
       (let [u (URI. (str x))]
         (make-resource (str u)))))
 
 (defn as-resource-or-literal [x]
-  (if (resource? x) x
+  (if (or (resource? x) (blank-node? x)) x
       (as-literal x)))
 
 (defn as-graph [x]
@@ -195,11 +195,19 @@
 (defn describe
   "Returns a new graph describing subject.  subject is converted with
   as-resource.  properties are predicate/value pairs, converted with
-  as-resource and as-resource-or-literal, respectively."
+  as-resource and as-resource-or-literal, respectively.
+
+  If a value is a vector, the first element becomes the object of the
+  current statement, and describe is applied recursively to the
+  vector and merged with the current graph."
   [subject & properties]
   (assert (even? (count properties)))
   (let [subj (as-resource subject)]
-    (make-graph (set (map (fn [[pred obj]]
-                            (make-stmt subj (as-resource pred)
-                                       (as-resource-or-literal obj)))
-                          (partition 2 properties))))))
+    (make-graph (set (mapcat (fn [[pred obj]]
+                               (if (vector? obj)
+                                 (cons (make-stmt subj (as-resource pred)
+                                                  (as-resource-or-literal (first obj)))
+                                       (seq (:stmts (apply describe obj))))
+                                 (list (make-stmt subj (as-resource pred)
+                                                  (as-resource-or-literal obj)))))
+                             (partition 2 properties))))))
