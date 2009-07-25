@@ -99,7 +99,7 @@
 
 (defmethod as-literal java.util.Map [x]
   (if (literal? x) x
-      (throw (Exception. "Tried to create literal from invalid Map."))))
+      (throw (Exception. "Cannot create RDF literal from java.util.Map."))))
 
 (defmethod as-literal String [x]
   (make-literal x "http://www.w3.org/2001/XMLSchema#string"))
