@@ -53,7 +53,7 @@
   (swap! *blank-node-counter* inc))
 
 (defn make-blank-node
-  ([] (struct blank-node :blank-node (next-blank-node-id)))
+  ([] (struct blank-node :blank-node (str \b (next-blank-node-id))))
   ([id] (struct blank-node :blank-node id)))
 
 (defn make-stmt
