@@ -12,26 +12,40 @@
 
 (defstruct graph :type :stmts :uri)
 
-(defn resource? [x]
+(defn resource?
+  "Returns true if x is a resource (not a blank node)."
+  [x]
   (and (map? x) (= (:type x) :resource)))
 
-(defn literal? [x]
+(defn literal?
+  "Returns true if x is a literal."
+  [x]
   (and (map? x) (= (:type x) :literal)))
 
-(defn blank-node? [x]
+(defn blank-node?
+  "Returns true if x is a blank-node."
+  [x]
   (and (map? x) (= (:type x) :blank-node)))
 
-(defn stmt? [x]
+(defn stmt?
+  "Returns true if x is a statement."
+  [x]
   (and (map? x) (= (:type x) :stmt)))
 
-(defn graph? [x]
+(defn graph?
+  "Returns true if x is a graph."
+  [x]
   (and (map? x) (= (:type x) :graph)))
 
-(defn make-resource [uri]
+(defn make-resource
+  "Low-level resource constructor. uri is a String."
+  [uri]
   (assert (string? uri))
   (struct resource :resource uri))
 
 (defn make-literal
+  "Low-level literal constructor.  All arguments are Strings.  If
+  language is provided, then datatype must be nil."
   ([value]
      (assert (string? value))
      (struct literal :literal value nil nil))
@@ -53,10 +67,13 @@
   (swap! *blank-node-counter* inc))
 
 (defn make-blank-node
+  "Blank node constructor.  Optional argument specifies a String
+  identifier for the node."
   ([] (struct blank-node :blank-node (str \b (next-blank-node-id))))
   ([id] (struct blank-node :blank-node id)))
 
 (defn make-stmt
+  "Statement constructor."
   ([subj pred obj]
      (assert (or (resource? subj) (blank-node? subj)))
      (assert (resource? pred))
@@ -70,6 +87,7 @@
      (struct stmt :stmt subj pred obj id)))
 
 (defn make-graph
+  "Graph constructor."
   ([] (struct graph :graph #{} nil))
   ([stmts]
      (assert (set? stmts))
@@ -77,7 +95,10 @@
      (struct graph :graph stmts nil))
   ([stmts uri] (struct graph :graph stmts uri)))
 
-(defmulti interpret-datatype (fn [datatype value] datatype))
+(defmulti
+  #^{:doc "Converts a String literal value to a Java object based on
+   its RDF datatype."}
+  interpret-datatype (fn [datatype value] datatype))
 
 (defmethod interpret-datatype "http://www.w3.org/2001/XMLSchema#string"
   [t value] value)
@@ -95,7 +116,8 @@
   (assert (literal? lit))
   (interpret-datatype (:datatype lit) (:value lit)))
 
-(defmulti as-literal type) 
+(defmulti #^{:doc "Converts a Java object to an RDF literal based on its type."}
+  as-literal type) 
 
 (defmethod as-literal java.util.Map [x]
   (if (literal? x) x
@@ -133,6 +155,10 @@
                 (str "Cannot make graph from " (class x)))))))
 
 (defn filter-graph
+  "With 2 arguments, returns a sequence of statements for which f is true.
+  With 4 arguments, returns a sequence of statements for
+  which (and (subj-f subject) (pred-f predicate) (obj-f object)) is
+  true."
   ([graph f]
      (assert (graph? graph))
      (filter f (:stmts graph)))
@@ -143,7 +169,8 @@
                                 (obj-f (:obj stmt)))))))
 
 (def #^{:doc "Function that takes any number of arguments and always
-     returns true."} any (constantly true))
+     returns true.  Used as shorthand in filter-graph."}
+     any (constantly true))
 
 (defn add-stmts
   "Returns a copy of graph with stmt added."
