@@ -107,16 +107,25 @@
 (defmethod as-literal Integer [x]
   (make-literal (str x) "http://www.w3.org/2001/XMLSchema#integer"))
 
-(defn as-resource [x]
+(defn as-resource
+  "If x is a resource or blank node, returns it; otherwise tries to
+  create a resource with x as the URI."
+  [x]
   (if (or (resource? x) (blank-node? x)) x
       (let [u (URI. (str x))]
         (make-resource (str u)))))
 
-(defn as-resource-or-literal [x]
+(defn as-resource-or-literal
+  "If x is a resource or blank node, returns it; otherwise tries to
+  create a literal using as-literal."
+  [x]
   (if (or (resource? x) (blank-node? x)) x
       (as-literal x)))
 
-(defn as-graph [x]
+(defn as-graph
+  "If x is a graph, returns it; otherwise if x is a set of statements,
+  creates a graph."
+  [x]
   (if (graph? x) x
       (if (and (coll? x) (every? stmt? x))
         (make-graph (set x))
