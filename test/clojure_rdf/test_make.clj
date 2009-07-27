@@ -19,7 +19,7 @@
 (deftest t-make-literal
   (is (literal? (make-literal "Hello, World!")))
   (is (literal? (make-literal "Hello, World!" *string*)))
-  (is (literal? (make-literal "Hello, World!" *string* "en"))))
+  (is (literal? (make-literal "Hello, World!" nil "en"))))
 
 (deftest t-make-stmt
   (is (stmt? (make-stmt (make-resource *alan*)
