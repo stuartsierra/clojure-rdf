@@ -248,3 +248,32 @@
                                 #{(make-stmt subj (as-resource pred)
                                              (as-resource-or-literal obj))}))
                             (partition 2 properties))))))
+
+;; bootstrap these resources befor loading clojure-rdf.vocabs.rdf
+(def rdf-first (make-resource "http://www.w3.org/1999/02/22-rdf-syntax-ns#first"))
+(def rdf-rest (make-resource "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest"))
+(def rdf-nil (make-resource "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"))
+
+(defn rdf-list
+  "Returns a pair [head s] where s is a sequence of statements
+  defining an RDF List containing elements and head is the blank node
+  at the head of the List."
+  [& elements]
+  (loop [stmts (list)
+         elems elements
+         head nil]
+    (if (seq elems)
+      (let [node (make-blank-node)]
+        (if head
+          (recur (cons (make-stmt node rdf-first (first elems))
+                       (cons (make-stmt (:subj (first stmts)) rdf-rest node)
+                               stmts))
+                 (next elems)
+                 head)
+          (recur (cons (make-stmt node rdf-first (first elems)) stmts)
+                 (next elems)
+                 node)))
+      ;; no more elements
+      (if head
+        [head (cons (make-stmt (:subj (first stmts)) rdf-rest rdf-nil) stmts)]
+        [rdf-nil (list)]))))
