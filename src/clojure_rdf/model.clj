@@ -10,7 +10,7 @@
 
 (defstruct stmt :type :subj :pred :obj :id)
 
-(defstruct graph :type :stmts :uri)
+(defstruct graph :type :stmts :uri :indexes)
 
 (defn resource?
   "Returns true if x is a resource (not a blank node)."
@@ -92,8 +92,8 @@
   ([stmts]
      (assert (set? stmts))
      (assert (every? stmt? stmts))
-     (struct graph :graph stmts nil))
-  ([stmts uri] (struct graph :graph stmts uri)))
+     (struct graph :graph stmts nil {}))
+  ([stmts uri] (struct graph :graph stmts uri {})))
 
 (defmulti
   #^{:doc "Converts a String literal value to a Java object based on
@@ -227,6 +227,68 @@
                                           (:obj stmt)))
               m))
           {} (:stmts graph)))
+
+(defn make-index
+  "Returns a map-based index of a collection of statements.
+  key1/key2/key3 are an ordering of :subj, :pred, and :obj, describing
+  how the index should be arranged.
+
+  The returned structure is a map from key1 to an inner map.  The
+  inner map is from key2 to sets of key3.  For example, if key1,key2,3
+  were :subj, :pred, and :obj, in that order, then the returned
+  structure would look like:
+
+  { subject1  { predicate1  #{ objects... }
+                predicate2  #{ objects... } }
+    subject2  { predicate3  #{ objects... } } ... }
+
+  The resulting index can be queried on the first two keys to quickly
+  retrieve all instances of the third key appearing in the indexed
+  statements."
+  [statements key1 key2 key3]
+  (reduce (fn [map1 stmt]
+            (let [map2 (or (map1 (key1 stmt)) {})
+                  value-set (or (map2 (key2 stmt)) #{})]
+              (assoc map1 (key1 stmt)
+                     (assoc map2 (key2 stmt)
+                            (conj value-set (key3 stmt))))))
+          {} statements))
+
+(defn add-index
+  "Returns a new graph with an added index, created with make-index."
+  [graph key1 key2 key3]
+  (assoc-in graph [:indexes [key1 key2 key3]]
+            (make-index (:stmts graph) key1 key2 key3)))
+
+(defn add-standard-indexes
+  "Returns a new graph with two added indexes, one in
+  [:subj :pred :obj] order and one in [:obj :pred :subj] order."
+  [graph]
+  (-> graph (add-index :subj :pred :obj) (add-index :obj :pred :subj)))
+
+(defn query-graph
+  "Exactly one of subj, pred, obj must be nil.  Searches graph for
+  statements matching the two non-nil parameters, returns a set of the
+  instances of the nil parameter.  The appropriate graph indexes must
+  be present."
+  [graph subj pred obj]
+  (cond (and subj pred (nil? obj))
+        (if (contains? (:indexes graph) [:subj :pred :obj])
+          (get-in graph [:indexes [:subj :pred :obj] subj pred])
+          (throw (Exception. "Graph needs [:subj :pred :obj] index.")))
+
+        (and (nil? subj) pred obj)
+        (if (contains? (:indexes graph) [:obj :pred :subj])
+          (get-in graph [:indexes [:obj :pred :subj] obj pred])
+          (throw (Exception. "Graph needs [:obj :pred :subj] index.")))
+
+        (and subj (nil? pred) obj)
+        (if (contains? (:indexes graph) [:pred :subj :obj])
+          (get-in graph [:indexes [:pred :subj :obj] subj obj])
+          (throw (Exception. "Graph needs [:pred :subj :obj] index.")))
+
+        :else
+        (throw (Exception. "Exactly one of subj,pred,obj must be nil in query-graph."))))
 
 (defn describe
   "Returns a new graph describing subject.  subject is converted with
